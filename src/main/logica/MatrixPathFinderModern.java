@@ -1,7 +1,5 @@
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.Objects;
 
 /**
  * Refactorización moderna de MatrixPathFinder usando colecciones estándar de Java
@@ -111,7 +109,6 @@ public class MatrixPathFinderModern {
                 
                 if (isValid(newRow, newCol) && matrix[newRow][newCol] != '#') {
                     Point neighbor = new Point(newRow, newCol);
-                    String cellKey = neighbor.row + "," + neighbor.col;
                     
                     if (!visitedCells.contains(neighbor)) {
                         List<Point> newPath = new ArrayList<>(currentPath);
@@ -179,20 +176,27 @@ public class MatrixPathFinderModern {
     /**
      * 2. FILTRADO (filter)
      * Filtra rutas por longitud mínima y máxima
+     * PARTE D: Retorna vista de solo lectura cuando sea apropiado
      */
     public List<PathInfo> filterPathsByLength(int minLength, int maxLength) {
-        return allPaths.stream()
+        return Collections.unmodifiableList(
+            allPaths.stream()
                 .filter(path -> path.getLength() >= minLength && path.getLength() <= maxLength)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList())
+        );
     }
     
     /**
      * Filtra rutas que pasan por un punto específico
+     * PARTE D: Retorna vista de solo lectura
      */
     public List<PathInfo> filterPathsContainingPoint(Point point) {
-        return allPaths.stream()
+        if (point == null) return Collections.emptyList();
+        return Collections.unmodifiableList(
+            allPaths.stream()
                 .filter(pathInfo -> pathInfo.getPath().contains(point))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList())
+        );
     }
     
     /**
@@ -219,34 +223,48 @@ public class MatrixPathFinderModern {
     /**
      * 4. CONJUNTOS (Set operations)
      * Unión de celdas visitadas de múltiples rutas
+     * PARTE D: Retorna copia defensiva (inmutabilidad)
      */
     public Set<Point> unionOfVisitedCells(List<List<Point>> paths) {
-        return paths.stream()
+        if (paths == null || paths.isEmpty()) {
+            return Collections.emptySet();
+        }
+        // Copia defensiva: crear nueva colección inmutable
+        return Collections.unmodifiableSet(
+            paths.stream()
                 .flatMap(List::stream)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toSet())
+        );
     }
     
     /**
      * Intersección: celdas comunes en todas las rutas
+     * PARTE D: Retorna copia defensiva
      */
     public Set<Point> intersectionOfPaths(List<List<Point>> paths) {
-        if (paths.isEmpty()) return Collections.emptySet();
+        if (paths == null || paths.isEmpty()) {
+            return Collections.emptySet();
+        }
         
         Set<Point> intersection = new HashSet<>(paths.get(0));
         for (int i = 1; i < paths.size(); i++) {
             intersection.retainAll(new HashSet<>(paths.get(i)));
         }
-        return intersection;
+        return Collections.unmodifiableSet(intersection);
     }
     
     /**
      * Diferencia: celdas en primera ruta que no están en la segunda
+     * PARTE D: Retorna copia defensiva
      */
     public Set<Point> differenceOfPaths(List<Point> path1, List<Point> path2) {
+        if (path1 == null) path1 = Collections.emptyList();
+        if (path2 == null) path2 = Collections.emptyList();
+        
         Set<Point> set1 = new HashSet<>(path1);
         Set<Point> set2 = new HashSet<>(path2);
         set1.removeAll(set2);
-        return set1;
+        return Collections.unmodifiableSet(set1);
     }
     
     /**
@@ -272,12 +290,16 @@ public class MatrixPathFinderModern {
     
     /**
      * Top-N rutas más cortas
+     * PARTE D: Retorna vista de solo lectura
      */
     public List<PathInfo> getTopShortestPaths(int n) {
-        return allPaths.stream()
+        if (n <= 0) return Collections.emptyList();
+        return Collections.unmodifiableList(
+            allPaths.stream()
                 .sorted(Comparator.comparingInt(PathInfo::getLength))
                 .limit(n)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList())
+        );
     }
     
     /**

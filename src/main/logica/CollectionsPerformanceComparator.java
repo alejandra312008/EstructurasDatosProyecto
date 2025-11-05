@@ -1,5 +1,4 @@
 import java.util.*;
-import java.util.stream.IntStream;
 
 /**
  * Comparador de rendimiento entre diferentes implementaciones de colecciones
